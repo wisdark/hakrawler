@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+        "net/url"
 	"net/http/httputil"
 	"os"
 	"strings"
@@ -38,9 +39,11 @@ func main() {
 	flag.StringVar(&conf.Outdir, "outdir", "", "Directory to save discovered raw HTTP requests")
 	flag.StringVar(&conf.Cookie, "cookie", "", "The value of this will be included as a Cookie header")
 	flag.StringVar(&conf.AuthHeader, "auth", "", "The value of this will be included as a Authorization header")
-	flag.StringVar(&conf.Scope, "scope", "subs", "Scope to include:\nstrict = specified domain only\nsubs = specified domain and subdomains\nfuzzy = anything containing the supplied domain\nyolo = everything")
+	flag.StringVar(&conf.Headers, "headers", "", "Headers to add in all requests. Multiple should be separated by semi-colon, e.g. HeaderOne: ValueOne;HeaderTwo: ValueTwo")
+	flag.StringVar(&conf.Scope, "scope", "subs", "Scope to include:\nstrict = specified domain only\nsubs = specified domain and subdomains\nyolo = everything")
 	flag.BoolVar(&conf.Wayback, "usewayback", false, "Query wayback machine for URLs and add them as seeds for the crawler")
 	flag.BoolVar(&conf.Plain, "plain", false, "Don't use colours or print the banners to allow for easier parsing")
+	flag.BoolVar(&conf.Nocolor, "nocolor", false, "Print the banners but without ANSI color codes")
 	flag.BoolVar(&conf.Runlinkfinder, "linkfinder", false, "Run linkfinder on javascript files.")
 
 	// which data to include in output?
@@ -53,7 +56,16 @@ func main() {
 	flag.BoolVar(&conf.IncludeSitemap, "sitemap", false, "Include sitemap.xml entries in output")
 	flag.BoolVar(&conf.IncludeWayback, "wayback", false, "Include wayback machine entries in output")
 	flag.BoolVar(&conf.IncludeAll, "all", true, "Include everything in output - this is the default, so this option is superfluous")
+    flag.BoolVar(&conf.Insecure, "insecure", false, "Ignore invalid HTTPS certificates")
 	flag.Parse()
+
+	// Verify flags
+	err := config.VerifyFlags(&conf)
+	if err != nil {
+		fmt.Println(err)
+		flag.Usage()
+		os.Exit(1)
+	}
 
 	// if -v is given, just display version number and exit
 	if conf.DisplayVersion {
@@ -69,13 +81,14 @@ func main() {
 	au := aurora.NewAurora(!conf.Plain)
 
 	// print the banner
-	if !conf.Plain {
+	if !conf.Plain && !conf.Nocolor {
 		banner(au)
 	}
 
 	stdout := bufio.NewWriter(os.Stdout)
 
-	c := collector.NewCollector(&conf, au, stdout)
+
+	// c := collector.NewCollector(&conf, au, stdout)
 
 	urls := make(chan string, 1)
 	var reqsMade []*http.Request
@@ -110,13 +123,19 @@ func main() {
 
 	for u := range urls {
 		wg.Add(1)
-		go func(url string) {
+		go func(site string) {
 			defer wg.Done()
-			// url set but does not include schema
-			if !strings.Contains(url, "://") && url != "" {
-				url = "http://" + url
+			if !strings.Contains(site, "://") && site != "" {
+				site = "http://" + site
 			}
-			reqsMade, crawlErr = c.Crawl(url)
+			parsedUrl, err := url.Parse(site)
+			if err != nil {
+				writeErrAndFlush(stdout, err.Error(), au)
+				return
+			}
+			c := collector.NewCollector(&conf, au, stdout, parsedUrl.Host)
+			// url set but does not include schema
+			reqsMade, crawlErr = c.Crawl(site)
 
 			// Report errors and flush requests to files as we go
 			if crawlErr != nil {

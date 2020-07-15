@@ -1,7 +1,7 @@
 # hakrawler
 
 [![Twitter](https://img.shields.io/badge/twitter-@hakluke_-blue.svg)](https://twitter.com/hakluke)
-[![Version](https://img.shields.io/badge/version-beta7-blue.svg)](https://github.com/hakluke/hakrawler)
+[![Version](https://img.shields.io/badge/version-beta11-blue.svg)](https://github.com/hakluke/hakrawler)
 [![License](https://img.shields.io/badge/license-MIT-_red.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)  
 
 ## What is it?
@@ -41,6 +41,9 @@ assetfinder target.com | hakrawler | some-xss-scanner
 - [Corben Leo](https://github.com/lc) added in functionality to pull links from JavaScript files
 - [delic](https://github.com/delic) made the code much cleaner
 - [hoenn](https://github.com/hoenn) made the code even cleanerer
+- [ameenmaali](https://twitter.com/ameenmaali) made a bunch of code improvements and bug fixes
+- [daehee](https://github.com/daehee) added the -nocolor flag
+- [robre](https://twitter.com/r0bre) added the -insecure flag
 
 ## Thanks
 
@@ -92,7 +95,6 @@ Usage of hakrawler:
     	Scope to include:
     	strict = specified domain only
     	subs = specified domain and subdomains
-    	fuzzy = anything containing the supplied domain
     	yolo = everything (default "subs")
   -sitemap
     	Include sitemap.xml entries in output
@@ -107,6 +109,8 @@ Usage of hakrawler:
   -v	Display version and exit
   -wayback
     	Include wayback machine entries in output
+  -insecure
+      Ignore SSL verification
 ```
 
 ## Basic Example
