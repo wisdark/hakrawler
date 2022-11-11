@@ -1,6 +1,6 @@
 # Hakrawler
 
-Fast golang web crawler for gathering URLs and JavaSript file locations. This is basically a simple implementation of the awesome Gocolly library.
+Fast golang web crawler for gathering URLs and JavaScript file locations. This is basically a simple implementation of the awesome Gocolly library.
 
 ## Example usages
 
@@ -14,6 +14,18 @@ Multiple URLs:
 
 ```
 cat urls.txt | hakrawler
+```
+
+Timeout for each line of stdin after 5 seconds:
+
+```
+cat urls.txt | hakrawler -timeout 5
+```
+
+Send all requests through a proxy:
+
+```
+cat urls.txt | hakrawler -proxy http://localhost:8080
 ```
 
 Include subdomains:
@@ -43,7 +55,7 @@ Then run this command to download + compile hakrawler:
 go install github.com/hakluke/hakrawler@latest
 ```
 
-You can now run `~/go/bin/hakrawler`. If you'd like to just run `hakrawler` without the full path, you'll need to `export PATH="/go/bin/:$PATH"`. You can also add this line to your `~/.bashrc` file if you'd like this to persist.
+You can now run `~/go/bin/hakrawler`. If you'd like to just run `hakrawler` without the full path, you'll need to `export PATH="~/go/bin/:$PATH"`. You can also add this line to your `~/.bashrc` file if you'd like this to persist.
 
 ### Docker Install (from dockerhub)
 
@@ -58,8 +70,15 @@ It's much easier to use the dockerhub method above, but if you'd prefer to run i
 ```
 git clone https://github.com/hakluke/hakrawler
 cd hakrawler
-docker build -t hakluke/hakrawler .
-docker run --rm -i hakluke/hakrawler --help
+sudo docker build -t hakluke/hakrawler .
+sudo docker run --rm -i hakluke/hakrawler --help
+```
+### Kali Linux: Using apt
+
+Note: This will install an older version of hakrawler without all the features, and it may be buggy. I recommend using one of the other methods.
+
+```sh
+sudo apt install hakrawler
 ```
 
 Then, to run hakrawler:
@@ -70,25 +89,29 @@ echo https://www.google.com | docker run --rm -i hakluke/hakrawler -subs
 
 ## Command-line options
 ```
+Usage of hakrawler:
   -d int
     	Depth to crawl. (default 2)
+  -dr
+    	Disable following HTTP redirects.
   -h string
     	Custom headers separated by two semi-colons. E.g. -h "Cookie: foo=bar;;Referer: http://example.com/"
+  -i	Only crawl inside path
   -insecure
     	Disable TLS verification.
-  -s	Show the source of URL based on where it was found (href, form, script, etc.)
+  -json
+    	Output as JSON.
+  -proxy string
+    	Proxy URL. E.g. -proxy http://127.0.0.1:8080
+  -s	Show the source of URL based on where it was found. E.g. href, form, script, etc.
+  -size int
+    	Page size limit, in KB. (default -1)
   -subs
     	Include subdomains for crawling.
   -t int
     	Number of threads to utilise. (default 8)
-  -u	Show only unique urls
+  -timeout int
+    	Maximum time to crawl each URL from stdin, in seconds. (default -1)
+  -u	Show only unique urls.
+  -w	Show at which link the URL is found.
 ```
-
-## Version 2 note
-
-From version 2, hakrawler has been completely rewritten and dramatically simplified to align more closely with the unix philosophy.
-
-- It is now much faster and less buggy.
-- Many features have been deprecated (robots.txt parsing, JS file parsing, sitemap parsing, waybackurls), instead, these features are written into separate tools that can be piped to from hakrawler.
-- No more terminal colours because they can cause annoying issues when piping to other tools.
-- Version 1 was my first ever Go project and the code was bad.
